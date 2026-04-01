@@ -9,57 +9,49 @@ qtd_linha = 5
 
 OFFSET = 40
 
+# Caminho base
+caminho = r"C:\Users\44840610827\Documents\DaviLucca\Lógica\PROJETO_BatalhaNaval"
+
 # Tela
 largura = 80 * qtd_coluna + OFFSET + 20
-altura = 80 * qtd_linha + 150
+altura = 80 * qtd_linha + 120
 
 tela = pygame.display.set_mode((largura, altura))
-fonte = pygame.font.Font("PressStart2P.ttf", 20)
-fonte_placar = pygame.font.Font("PressStart2P.ttf", 15)
-
-# Placar
-painel_x = 40
-painel_y = qtd_linha * 80 + 50
-painel_largura = largura - 80
-painel_altura = 90
 
 # Fundo
-fundo = pygame.image.load("FUNDO_MAR.webp")
+fundo = pygame.image.load(f"{caminho}\\FUNDO_MAR.webp")
 fundo = pygame.transform.scale(fundo, (largura, altura))
+
+# 🔧 AJUSTE DE ESCURECIMENTO (0 a 255)
 escurecimento = 80
 overlay = pygame.Surface((largura, altura))
 overlay.fill((0, 0, 0))
 overlay.set_alpha(escurecimento)
 
-# Personagens
-J1 = pygame.image.load("J1.png")
-J2 = pygame.image.load("J2.png")
-J1 = pygame.transform.scale(J1, (painel_altura - 5, painel_altura -5))
-J2 = pygame.transform.scale(J2, (painel_altura - 5, painel_altura - 5))
+# Fonte
+fonte = pygame.font.Font(f"{caminho}\\PressStart2P.ttf", 20)
 
 # Imagens
-navio = pygame.image.load("navio.png")
-explosao = pygame.image.load("explosao.png")
-agua = pygame.image.load("agua.png")
-erro = pygame.image.load("erro.png")
+navio = pygame.image.load(f"{caminho}\\navio.png")
+explosao = pygame.image.load(f"{caminho}\\explosao.png")
+agua = pygame.image.load(f"{caminho}\\agua.png")
+erro = pygame.image.load(f"{caminho}\\erro.png")
 
 navio = pygame.transform.scale(navio, (80, 80))
 explosao = pygame.transform.scale(explosao, (80, 80))
 agua = pygame.transform.scale(agua, (80, 80))
 erro = pygame.transform.scale(erro, (40, 40))
 
-# Musica
-som_explosão = pygame.mixer.Sound("explosao.wav")
-som_explosão.set_volume(0.8)
-som_vitoria = pygame.mixer.Sound("victory.wav")
-som_vitoria.set_volume(1)
-som_vitoria_tocando = False
+# Personagens
+luigi = pygame.image.load(f"{caminho}\\LUIGI.jpg")
+mario = pygame.image.load(f"{caminho}\\MÁRIO.jpg")
+
+luigi = pygame.transform.scale(luigi, (50, 50))
+mario = pygame.transform.scale(mario, (50, 50))
 
 # Campos
 campo1 = [[0 for _ in range(qtd_coluna)] for _ in range(qtd_linha)]
 campo2 = [[0 for _ in range(qtd_coluna)] for _ in range(qtd_linha)]
-
-
 
 # Controle
 estado = "jogador1"
@@ -67,16 +59,16 @@ navios = 0
 jogador = 1
 tempo_inicio, tempo_ataque = 0, 0
 
-qtd_navio = 4
+qtd_navio = (qtd_coluna * qtd_linha) // 4
 
 ataque_em_andamento = False
 
-
 while True:
+    # Fundo
     tela.blit(fundo, (0, 0))
     tela.blit(overlay, (0, 0))
 
-    for evento in pygame.event.get(): #retorna todos os eventos ocorridos
+    for evento in pygame.event.get():
         if evento.type == pygame.QUIT: 
             pygame.quit()
             sys.exit()
@@ -119,9 +111,8 @@ while True:
                         if campo2[linha][coluna] in [2, -1]:
                             ataque_em_andamento = False
                             continue
-                        if (campo2[linha][coluna] == 1):
-                            campo2[linha][coluna] = 2
-                            som_explosão.play()  
+                        if campo2[linha][coluna] == 1:
+                            campo2[linha][coluna] = 2  
                         else:
                             campo2[linha][coluna] = -1
 
@@ -129,16 +120,12 @@ while True:
                         if campo1[linha][coluna] in [2, -1]:
                             ataque_em_andamento = False
                             continue
-                        if (campo1[linha][coluna] == 1):
-                            campo1[linha][coluna] = 2
-                            som_explosão.play()   
+                        if campo1[linha][coluna] == 1:
+                            campo1[linha][coluna] = 2  
                         else:
                             campo1[linha][coluna] = -1
 
-            print(f"{linha}, {coluna} ")
-            
-
-    # Números das posições
+    # Números
     for j in range(qtd_coluna):
         texto = fonte.render(str(j), True, (255,255,255))
         tela.blit(texto, (j * 80 + OFFSET + 30, 5))
@@ -147,23 +134,13 @@ while True:
         texto = fonte.render(str(i), True, (255,255,255))
         tela.blit(texto, (5, i * 80 + OFFSET + 30))
 
-    # STATUS: qtd de navios
-    rest1 =[]
-    for p in campo1: #p: posição
-        for item in p:
-            if item == 1:
-                rest1.append(item)
-    rest2 =[]
-    for p in campo2:
-        for item in p:
-            if item == 1:
-                rest2.append(item)
-
+    # Contagem
+    rest1 = [item for linha in campo1 for item in linha if item == 1]
+    rest2 = [item for linha in campo2 for item in linha if item == 1]
 
     navios_rest1 = len(rest1)
     navios_rest2 = len(rest2)
     
-
     # Campo
     for i in range(qtd_linha):
         for j in range(qtd_coluna):
@@ -175,16 +152,10 @@ while True:
             elif estado in ["jogador2", "mostrar2"]:
                 valor = campo2[i][j]
             else:
-                if jogador == 1:
-                    valor = campo2[i][j] 
-                else:
-                    valor = campo1[i][j]
-    
+                valor = campo2[i][j] if jogador == 1 else campo1[i][j]
                 if valor == 1:
                     valor = 0
 
-            #define cada icone!
-            #.blit desenha onde você quer
             if valor == 0:
                 tela.blit(agua, (x, y))
             elif valor == 1:
@@ -199,50 +170,42 @@ while True:
 
             pygame.draw.rect(tela, (50,50,50), (x,y,80,80), 1)
 
-    #tamanho do placar
-    
+    # Painel
+    painel_x = 40
+    painel_y = qtd_linha * 80 + 50
+    painel_largura = largura - 80
+    painel_altura = 60
 
-    #placar
     pygame.draw.rect(tela, (20,20,20), (painel_x, painel_y, painel_largura, painel_altura))
     pygame.draw.rect(tela, (200,200,200), (painel_x, painel_y, painel_largura, painel_altura), 2)
 
+    # 👇 PERSONAGEM DINÂMICO
+    if estado in ["jogador1", "mostrar1"] or (estado == "jogo" and jogador == 1):
+        tela.blit(luigi, (painel_x + 10, painel_y + 5))
+
+    elif estado in ["jogador2", "mostrar2"] or (estado == "jogo" and jogador == 2):
+        tela.blit(mario, (painel_x + 10, painel_y + 5))
 
     if estado == "jogo":
-        fonte_pla = pygame.font.Font("PressStart2P.ttf", 15)
+        fonte_pla = pygame.font.Font(f"{caminho}\\PressStart2P.ttf", 15)
+        turno_txt = f"Turno: Jogador {jogador}"
+        info_txt = f"J1: {navios_rest1} navios  |  J2: {navios_rest2} navios"
 
-        if jogador == 1:
-            nome_jogador = "Lyra"
-        elif jogador == 2:
-            nome_jogador = "Kael"
-
-
-        tela.blit(J1, (painel_x + 30, painel_y - 5))
-        texto_j1 = fonte.render(f"{navios_rest1}", True, (255,255,255))
-        tela.blit(texto_j1, (painel_x + 120, painel_y + 35))
-
-        tela.blit(J2, (painel_x + 500, painel_y - 5))
-        texto_j2 = fonte.render(f"{navios_rest2}", True, (255,255,255))
-        tela.blit(texto_j2, (painel_x + 480, painel_y + 35))
-
-        turno_txt = fonte.render(f"ATAQUE: {nome_jogador}", True, (255,255,0))
-        tela.blit(turno_txt, (painel_x + 190, painel_y + 35))
+        tela.blit(fonte_pla.render(turno_txt, True, (255,255,0)), (painel_x + 80, painel_y + 10))
+        tela.blit(fonte_pla.render(info_txt, True, (255,255,255)), (painel_x + 80, painel_y + 35))
 
     else:
-        if estado == "jogador1":
-            tela.blit(J1, (painel_x + 30, painel_y - 5))
-            jog1 = fonte.render("Jogador 1", True, (255,255,255))
-            tela.blit(jog1, (painel_x + 120, painel_y + 35))
+        mensagens = {
+            "jogador1": "Jogador 1 - Posicione",
+            "mostrar1": "Memorize J1",
+            "jogador2": "Jogador 2 - Posicione",
+            "mostrar2": "Memorize J2"
+        }
 
-        elif estado == "jogador2":
-            tela.blit(J2, (painel_x + 500, painel_y - 5))
-            jog2 = fonte.render("Jogador 2", True, (255,255,255))
-            tela.blit(jog2, (painel_x + 300, painel_y + 35))
+        msg = mensagens.get(estado, "")
+        tela.blit(fonte.render(msg, True, (255,255,255)), (painel_x + 80, painel_y + 15))
 
-        elif estado in ["mostrar1", "mostrar2"]:
-            msg = fonte.render("Memorize", True, (255,255,255))
-            tela.blit(msg, (painel_x + painel_largura//2 - 80, painel_y + 35))
-
-    #tempo de diferença
+    # Estados
     if estado == "mostrar1" and pygame.time.get_ticks() - tempo_inicio > 2000:
         estado = "jogador2"
         navios = 0
@@ -252,32 +215,16 @@ while True:
 
     if ataque_em_andamento and pygame.time.get_ticks() - tempo_ataque > 1000:
         ataque_em_andamento = False
-        if (jogador == 1):
-            jogador = 2
-        else:
-            jogador = 1 
+        jogador = 2 if jogador == 1 else 1
 
-    #vencedor
+    # Vitória
     if estado == "jogo":
-        if navios_rest2 == 0:
-
-            som_vitoria.play()
-            som_vitoria_tocando = True
-            estado = "fim"
-
-        elif navios_rest1 == 0:
-            som_vitoria.play()
-            som_vitoria_tocando = True
-            estado = "fim"
-        
-    if estado == "fim":
         if navios_rest2 == 0:
             tela.fill((255,255,255))
             tela.blit(fonte.render("J1 venceu!", True, (0,0,0)), (200,200))
+
         elif navios_rest1 == 0:
             tela.fill((255,255,255))
             tela.blit(fonte.render("J2 venceu!", True, (0,0,0)), (200,200))
-
-    
 
     pygame.display.flip()
