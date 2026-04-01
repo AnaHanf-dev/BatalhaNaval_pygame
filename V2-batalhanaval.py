@@ -14,7 +14,7 @@ largura = 80 * qtd_coluna + OFFSET + 20
 altura = 80 * qtd_linha + 120
 
 tela = pygame.display.set_mode((largura, altura))
-fonte = pygame.font.Font("PressStart2P.ttf", 20)
+fonte = pygame.font.Font("c:/Users/50459444875/Documents/AnaHanf/Lógica/Batalha_Naval/BatalhaNaval_pygame/PressStart2P.ttf", 20)
 
 # Imagens
 navio = pygame.image.load("navio.png")
@@ -27,6 +27,13 @@ explosao = pygame.transform.scale(explosao, (80, 80))
 agua = pygame.transform.scale(agua, (80, 80))
 erro = pygame.transform.scale(erro, (40, 40))
 
+# Musica
+som_explosão = pygame.mixer.Sound("explosao.wav")
+som_explosão.set_volume(0.8)
+som_vitoria = pygame.mixer.Sound("victory.wav")
+som_vitoria.set_volume(1)
+som_vitoria_tocando = False
+
 # Campos
 campo1 = [[0 for _ in range(qtd_coluna)] for _ in range(qtd_linha)]
 campo2 = [[0 for _ in range(qtd_coluna)] for _ in range(qtd_linha)]
@@ -37,7 +44,7 @@ navios = 0
 jogador = 1
 tempo_inicio, tempo_ataque = 0, 0
 
-qtd_navio = (qtd_coluna * qtd_linha) // 4
+qtd_navio = 4
 
 ataque_em_andamento = False
 
@@ -89,7 +96,8 @@ while True:
                             ataque_em_andamento = False
                             continue
                         if (campo2[linha][coluna] == 1):
-                            campo2[linha][coluna] = 2  
+                            campo2[linha][coluna] = 2
+                            som_explosão.play()  
                         else:
                             campo2[linha][coluna] = -1
 
@@ -98,7 +106,8 @@ while True:
                             ataque_em_andamento = False
                             continue
                         if (campo1[linha][coluna] == 1):
-                            campo1[linha][coluna] = 2  
+                            campo1[linha][coluna] = 2
+                            som_explosão.play()   
                         else:
                             campo1[linha][coluna] = -1
 
@@ -116,7 +125,7 @@ while True:
 
     # STATUS: qtd de navios
     rest1 =[]
-    for p in campo1:
+    for p in campo1: #p: posição
         for item in p:
             if item == 1:
                 rest1.append(item)
@@ -142,7 +151,10 @@ while True:
             elif estado in ["jogador2", "mostrar2"]:
                 valor = campo2[i][j]
             else:
-                valor = campo2[i][j] if jogador == 1 else campo1[i][j]
+                if jogador == 1:
+                    valor = campo2[i][j] 
+                else:
+                    valor = campo1[i][j]
     
                 if valor == 1:
                     valor = 0
@@ -210,9 +222,19 @@ while True:
     #vencedor
     if estado == "jogo":
         if navios_rest2 == 0:
+            som_vitoria.play()
+            som_vitoria_tocando = True
+            estado = "fim"
+
+        elif navios_rest1 == 0:
+            som_vitoria.play()
+            som_vitoria_tocando = True
+            estado = "fim"
+        
+    if estado == "fim":
+        if navios_rest2 == 0:
             tela.fill((255,255,255))
             tela.blit(fonte.render("J1 venceu!", True, (0,0,0)), (200,200))
-
         elif navios_rest1 == 0:
             tela.fill((255,255,255))
             tela.blit(fonte.render("J2 venceu!", True, (0,0,0)), (200,200))
