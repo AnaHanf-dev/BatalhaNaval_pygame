@@ -4,20 +4,24 @@ import sys
 pygame.init()
 pygame.display.set_caption("BATALHA NAVAL")
 
+#Som Background
+pygame.mixer.music.load("Song_background.mp3")
+pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.play(-1)
+
+
 qtd_coluna = 8
-qtd_linha = 5
+qtd_linha = 6
 
 OFFSET = 40
 
 # Tela
 largura = 80 * qtd_coluna + OFFSET + 20
 altura = 80 * qtd_linha + 150
-
 tela = pygame.display.set_mode((largura, altura))
 fonte = pygame.font.Font("PressStart2P.ttf", 20)
-fonte_placar = pygame.font.Font("PressStart2P.ttf", 15)
 
-# Placar
+#tamanho do placar
 painel_x = 40
 painel_y = qtd_linha * 80 + 50
 painel_largura = largura - 80
@@ -48,18 +52,27 @@ explosao = pygame.transform.scale(explosao, (80, 80))
 agua = pygame.transform.scale(agua, (80, 80))
 erro = pygame.transform.scale(erro, (40, 40))
 
+#Imagem venceu
+lyra_venceu = pygame.image.load("lyra_venceu.png")
+kael_venceu = pygame.image.load("kael_venceu.png")
+
+lyra_venceu = pygame.transform.scale(lyra_venceu, (largura, altura))
+kael_venceu = pygame.transform.scale(kael_venceu, (largura, altura))
+
 # Musica
 som_explosão = pygame.mixer.Sound("explosao.wav")
 som_explosão.set_volume(0.8)
 som_vitoria = pygame.mixer.Sound("victory.wav")
 som_vitoria.set_volume(1)
 som_vitoria_tocando = False
+som_navio = pygame.mixer.Sound("Barco_sound.wav")
+som_navio.set_volume(0.8)
+som_error = pygame.mixer.Sound("error_sound.wav")
+som_error.set_volume(0.8)
 
 # Campos
 campo1 = [[0 for _ in range(qtd_coluna)] for _ in range(qtd_linha)]
 campo2 = [[0 for _ in range(qtd_coluna)] for _ in range(qtd_linha)]
-
-
 
 # Controle
 estado = "jogador1"
@@ -67,7 +80,7 @@ navios = 0
 jogador = 1
 tempo_inicio, tempo_ataque = 0, 0
 
-qtd_navio = 4
+qtd_navio = (qtd_coluna * qtd_linha) // 6
 
 ataque_em_andamento = False
 
@@ -86,6 +99,9 @@ while True:
 
             linha = (y - OFFSET) // 80
             coluna = (x - OFFSET) // 80
+            coluna2 = ((x - OFFSET) // 80) + 1 
+
+            print(f"{x}, {y}" f"\n{linha}, {coluna}")
 
             if linha < 0 or coluna < 0:
                 continue
@@ -93,19 +109,43 @@ while True:
             if linha < qtd_linha and coluna < qtd_coluna:
 
                 if estado == "jogador1":
-                    if campo1[linha][coluna] == 0:
-                        campo1[linha][coluna] = 1
-                        navios += 1
-
+                    if evento.type == pygame.MOUSEBUTTONDOWN:
+                        if evento.button == 1:
+                            if campo1[linha][coluna] == 0:
+                                campo1[linha][coluna] = 1
+                                navios += 1
+                                som_navio.play()
+                        elif evento.button == 3:
+                            if linha < qtd_linha and coluna2 > qtd_coluna-1:
+                                continue
+                            elif linha < qtd_linha and coluna < qtd_coluna:
+                                if campo1[linha][coluna] == 0 and campo1[linha][coluna2] == 0:
+                                    campo1[linha][coluna] = 1
+                                    campo1[linha][coluna+1] = 1
+                                    navios += 2
+                                    som_navio.play()
+                                    
                     if navios == qtd_navio:
                         estado = "mostrar1"
                         tempo_inicio = pygame.time.get_ticks()
 
                 elif estado == "jogador2":
-                    if campo2[linha][coluna] == 0:
-                        campo2[linha][coluna] = 1
-                        navios += 1
-
+                    if evento.type == pygame.MOUSEBUTTONDOWN:
+                        if evento.button == 1:
+                            if campo2[linha][coluna] == 0:
+                                campo2[linha][coluna] = 1
+                                navios += 1
+                                som_navio.play()
+                        elif evento.button == 3:
+                            if linha < qtd_linha and coluna2 > qtd_coluna-1:
+                                continue
+                            elif linha < qtd_linha and coluna < qtd_coluna:
+                                if campo2[linha][coluna] == 0 and campo2[linha][coluna2] == 0:
+                                    campo2[linha][coluna] = 1
+                                    campo2[linha][coluna+1] = 1
+                                    navios += 2
+                                    som_navio.play()
+                                    
                     if navios == qtd_navio:
                         estado = "mostrar2"
                         tempo_inicio = pygame.time.get_ticks()
@@ -124,6 +164,7 @@ while True:
                             som_explosão.play()  
                         else:
                             campo2[linha][coluna] = -1
+                            som_error.play()
 
                     else:
                         if campo1[linha][coluna] in [2, -1]:
@@ -134,22 +175,21 @@ while True:
                             som_explosão.play()   
                         else:
                             campo1[linha][coluna] = -1
-
-            print(f"{linha}, {coluna} ")
+                            som_error.play()
             
 
     # Números das posições
-    for j in range(qtd_coluna):
-        texto = fonte.render(str(j), True, (255,255,255))
-        tela.blit(texto, (j * 80 + OFFSET + 30, 5))
+    for c in range(qtd_coluna):
+        texto = fonte.render(str(c), True, (255,255,255))
+        tela.blit(texto, (c * 80 + OFFSET + 30, 5))
 
-    for i in range(qtd_linha):
-        texto = fonte.render(str(i), True, (255,255,255))
-        tela.blit(texto, (5, i * 80 + OFFSET + 30))
+    for l in range(qtd_linha):
+        texto = fonte.render(str(l), True, (255,255,255))
+        tela.blit(texto, (5, l * 80 + OFFSET + 30))
 
     # STATUS: qtd de navios
     rest1 =[]
-    for p in campo1: #p: posição
+    for p in campo1: # p: posição
         for item in p:
             if item == 1:
                 rest1.append(item)
@@ -165,20 +205,20 @@ while True:
     
 
     # Campo
-    for i in range(qtd_linha):
-        for j in range(qtd_coluna):
-            x = j * 80 + OFFSET
-            y = i * 80 + OFFSET
+    for l in range(qtd_linha):
+        for c in range(qtd_coluna):
+            x = c * 80 + OFFSET
+            y = l * 80 + OFFSET
 
             if estado in ["jogador1", "mostrar1"]:
-                valor = campo1[i][j]
+                valor = campo1[l][c]
             elif estado in ["jogador2", "mostrar2"]:
-                valor = campo2[i][j]
-            else:
+                valor = campo2[l][c]
+            else: #momento do jogo
                 if jogador == 1:
-                    valor = campo2[i][j] 
+                    valor = campo2[l][c] 
                 else:
-                    valor = campo1[i][j]
+                    valor = campo1[l][c]
     
                 if valor == 1:
                     valor = 0
@@ -199,8 +239,8 @@ while True:
 
             pygame.draw.rect(tela, (50,50,50), (x,y,80,80), 1)
 
-    #tamanho do placar
-    
+
+
 
     #placar
     pygame.draw.rect(tela, (20,20,20), (painel_x, painel_y, painel_largura, painel_altura))
@@ -208,8 +248,6 @@ while True:
 
 
     if estado == "jogo":
-        fonte_pla = pygame.font.Font("PressStart2P.ttf", 15)
-
         if jogador == 1:
             nome_jogador = "Lyra"
         elif jogador == 2:
@@ -222,7 +260,7 @@ while True:
 
         tela.blit(J2, (painel_x + 500, painel_y - 5))
         texto_j2 = fonte.render(f"{navios_rest2}", True, (255,255,255))
-        tela.blit(texto_j2, (painel_x + 480, painel_y + 35))
+        tela.blit(texto_j2, (painel_x + 470, painel_y + 35))
 
         turno_txt = fonte.render(f"ATAQUE: {nome_jogador}", True, (255,255,0))
         tela.blit(turno_txt, (painel_x + 190, painel_y + 35))
@@ -255,28 +293,27 @@ while True:
         if (jogador == 1):
             jogador = 2
         else:
-            jogador = 1 
+            jogador = 1
 
     #vencedor
     if estado == "jogo":
         if navios_rest2 == 0:
-
+            pygame.mixer.music.stop()
             som_vitoria.play()
             som_vitoria_tocando = True
             estado = "fim"
 
         elif navios_rest1 == 0:
+            pygame.mixer.music.stop()
             som_vitoria.play()
             som_vitoria_tocando = True
             estado = "fim"
         
     if estado == "fim":
         if navios_rest2 == 0:
-            tela.fill((255,255,255))
-            tela.blit(fonte.render("J1 venceu!", True, (0,0,0)), (200,200))
+            tela.blit(lyra_venceu, (0, 0))
         elif navios_rest1 == 0:
-            tela.fill((255,255,255))
-            tela.blit(fonte.render("J2 venceu!", True, (0,0,0)), (200,200))
+            tela.blit(kael_venceu,  (0, 0))
 
     
 
